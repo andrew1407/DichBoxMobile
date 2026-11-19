@@ -1,0 +1,54 @@
+name: Deploy showcase to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Compile the app's platform-independent Kotlin (app/src/main/java, app/src/test/java) to WebAssembly
+      - name: Build Kotlin/Wasm module
+        working-directory: web/kotlin
+        run: ./gradlew showcase --no-daemon
+
+      # Mirror the repo layout so the page can read the app's own res/ at ../app/src/main/res
+      - name: Assemble site
+        run: |
+          mkdir -p _site/web _site/app/src/main
+          cp web/*.html web/*.js web/*.svg _site/web/
+          cp -r web/mock web/kotlin-wasm _site/web/
+          cp -r app/src/main/res _site/app/src/main/
+          (cd app/src/main/res && find . -type f | sort) > _site/web/res-index.txt
+          echo '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./web/"><title>DichBox Mobile</title><link rel="icon" href="./web/icon.svg"><a href="./web/">Open the showcase</a>' > _site/index.html
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
