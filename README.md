@@ -1,7 +1,7 @@
 # DichBoxMobile
 
 <p align="center">
-  <a href="https://andrew1407.github.io/DichBoxMobile/" title="Open the app in the browser"><img src="https://raw.githubusercontent.com/Andrew1407/DichBox/main/client/src/styles/imgs/full-logo.png" width="140" alt="DichBox Logo" /></a>
+  <a href="https://andrew1407.github.io/DichBoxMobile/" title="Open the app in the browser"><img src="web/icon.svg" alt="DichBox Mobile" width="140" height="140"></a>
 </p>
 
 [![pages deploy badge](https://github.com/andrew1407/DichBoxMobile/actions/workflows/pages.yml/badge.svg)](https://andrew1407.github.io/DichBoxMobile/)
