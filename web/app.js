@@ -1814,8 +1814,14 @@ async function boot() {
     const [, signed] = api('enterUser', { email: first.email, passwd: first.passwd });
     signedFile = [...signed.user_uid].reverse().join('');
     screen = $('#screen');
-    screen.style.setProperty('--status', themeAttr('statusBarColor'));
-    window.addEventListener('themechange', () => screen.style.setProperty('--status', themeAttr('statusBarColor')));
+    const statusBar = () => {
+      const c = themeAttr('statusBarColor');
+      screen.style.setProperty('--status', c);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c);
+    };
+    statusBar();
+    window.addEventListener('themechange', statusBar);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', statusBar);
     const activity = new MainActivity();
     screen.querySelector('.app').replaceChildren(activity.root);
     activity.created();
