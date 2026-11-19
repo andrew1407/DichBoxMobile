@@ -1,5 +1,11 @@
 name: dichbox app testing and build
-on: push
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE*'
+      - '.gitignore'
+
 jobs:
   build:
     runs-on: ubuntu-latest
