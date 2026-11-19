@@ -5,7 +5,7 @@
 // the server stores them in and the app's fromBase64ToBitmap() expects).
 const RES = '../app/src/main/res/';
 const images = {
-  dichIcon: 'mipmap-xxxhdpi/dich_icon.png',
+  dichIcon: 'mipmap-xxxhdpi/dich_icon_foreground.png', // the fish on a transparent background
   folderIcon: 'mipmap-xxxhdpi/folder_icon.png',
   fileIcon: 'mipmap-xxxhdpi/file_icon.png',
   trashBinIcon: 'mipmap-xxxhdpi/trash_bin.png',
@@ -17,8 +17,17 @@ const images = {
   defaultUserLogo: 'drawable-hdpi/default_user_logo.png'
 };
 
+// The adaptive-icon foreground has wide transparent margins, so it is cut to the fish.
+const CROP = { 'mipmap-xxxhdpi/dich_icon_foreground.png': [46, 46, 340, 340] };
+
 const toDataUrl = async path => {
-  const blob = await (await fetch(RES + path)).blob();
+  let blob = await (await fetch(RES + path)).blob();
+  if (CROP[path]) {
+    const [x, y, w, h] = CROP[path];
+    const canvas = new OffscreenCanvas(w, h);
+    canvas.getContext('2d').drawImage(await createImageBitmap(blob, x, y, w, h), 0, 0);
+    blob = await canvas.convertToBlob({ type: 'image/png' });
+  }
   return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
