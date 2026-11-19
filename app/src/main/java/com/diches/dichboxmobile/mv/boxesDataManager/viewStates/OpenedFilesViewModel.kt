@@ -73,7 +73,7 @@ class OpenedFilesViewModel : ViewModel(), Cleanable {
             val currentPath = it.filePath
             if (currentPath.startsWith(oldPath)) {
                 val unchangedPart = if (oldPath.length >= currentPath.length) ""
-                else currentPath.slice(oldPath.indices)
+                else currentPath.substring(oldPath.length)
                 val modifiedPath = newPath + unchangedPart
                 it.copy(filePath = modifiedPath)
             } else it

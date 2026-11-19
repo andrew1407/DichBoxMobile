@@ -39,13 +39,13 @@ class InputDialog(private val filesListVM: FilesListViewModel) {
     private fun handleInput() {
         input.addTextChangedListener {
             val inputStr = input.text.toString()
-            val inputValid = Regex("""[^\s/]{1,40}""")
+            val inputValid = Regex("""[^#%\?\s/]{1,40}""")
             val okBtn = dialog.findViewById<Button>(android.R.id.button1)
             if (!inputValid.matches(inputStr)) {
                 okBtn.isEnabled = false
                 DrawableCompat.setTint(input.background, AppColors.CRIMSON.raw)
                 val warningText =
-                    "Invalid input (name can\\'t include spaces, \"?\", \"/\", \"#\", \"%\", length should be 1-40 symbols)"
+                    "Invalid input (name can't include spaces, \"?\", \"/\", \"#\", \"%\", length should be 1-40 symbols)"
                 warning.text = warningText
                 return@addTextChangedListener
             }

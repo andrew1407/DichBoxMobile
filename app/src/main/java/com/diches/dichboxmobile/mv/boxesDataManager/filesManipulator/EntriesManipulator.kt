@@ -350,7 +350,7 @@ class EntriesManipulator(
                     src = entries
             )
             val (st, res) = withContext(Dispatchers.IO) { api.createFile(createContainer) }
-            if (Statuses.CREATED.eq(st)) return@launch
+            if (Statuses.CREATED.eqNot(st)) return@launch
             val (newList, editedDate) = res as BoxesContainer.CreateFileRes
             val currentEntries = filesListVM.liveData.value!!.entries
             val currentDir = currentEntries.dir!!
