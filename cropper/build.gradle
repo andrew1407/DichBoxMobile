@@ -1,0 +1,24 @@
+// Android-Image-Cropper 2.8.0 (https://github.com/ArthurHub/Android-Image-Cropper, Apache-2.0),
+// vendored unchanged because it was only published to JCenter, which no longer serves it.
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 30
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    api 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'androidx.exifinterface:exifinterface:1.0.0'
+}
