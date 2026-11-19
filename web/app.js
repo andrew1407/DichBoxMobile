@@ -62,38 +62,18 @@ globalThis.__ktView = (handle, key, value) => {
   }
 };
 
-// Every request the compiled UserAPI/BoxesAPI sends ends up here (Retrofit stand-in -> jsPost).
-const ROUTES = {
-  'users/verify': 'UserAPI.verifyField', 'users/passwd_verify': 'UserAPI.verifyPassword', 'users/create': 'UserAPI.createUser',
-  'users/enter': 'UserAPI.enterUser', 'users/remove': 'UserAPI.removeUser', 'users/find': 'UserAPI.findUser',
-  'users/search': 'UserAPI.search', 'users/edit': 'UserAPI.editUser', 'users/subs_list': 'UserAPI.getSubscriptions',
-  'users/subscription': 'UserAPI.subscribeAction', 'users/notifications_list': 'UserAPI.getNotifications',
-  'users/notifications_remove': 'UserAPI.removeNotifications', 'users/names_list': 'UserAPI.getUsernames',
-  'users/access_lists': 'UserAPI.getAccessLists', 'users/identify': 'UserAPI.getUsernameByUuid',
-  'boxes/create': 'BoxesAPI.createBox', 'boxes/user_boxes': 'BoxesAPI.getUserBoxes', 'boxes/verify': 'BoxesAPI.verify',
-  'boxes/details': 'BoxesAPI.getBoxDetails', 'boxes/remove': 'BoxesAPI.removeBox', 'boxes/edit': 'BoxesAPI.editBox',
-  'boxes/files/list': 'BoxesAPI.getPathFiles', 'boxes/files/remove': 'BoxesAPI.removeFile', 'boxes/files/rename': 'BoxesAPI.renameFile',
-  'boxes/files/create': 'BoxesAPI.createFile', 'boxes/files/get': 'BoxesAPI.getFileEntries', 'boxes/files/save': 'BoxesAPI.saveFiles',
-};
-let via = 'fragment';
 globalThis.__dichboxPost = (url, body) => {
-  const route = url.replace(/^https?:\/\/[^/]+\//, '');
   const [status, json] = handleRequest(url, JSON.parse(body));
-  logCall(ROUTES[route] ?? route, '/' + route, status, via);
   return `${status}\n${JSON.stringify(json)}`;
 };
 
 let onSigned = () => {};
 globalThis.__ktSigned = (name, uuid) => onSigned(name, uuid);
 
-/** Runs fn with the log's "called from" column set to label. */
-const from = (label, fn) => (...args) => { const prev = via; via = label; try { return fn(...args); } finally { via = prev; } };
 
 /** One call of the app's UserAPI/BoxesAPI (Kotlin), returning [status, response container]. */
 function api(method, request) {
-  const r = JSON.parse(from('fragment', kt.api)(method, JSON.stringify(request)));
-  if (log.length) log[log.length - 1].type = r.type;
-  renderLog();
+  const r = JSON.parse(kt.api(method, JSON.stringify(request)));
   return [r.status, r.body];
 }
 
@@ -1815,88 +1795,12 @@ class OpenedFilesList extends Fragment {
 
 // ================================================================== page ==
 
-const log = [];
-function logCall(method, route, status, origin) {
-  log.push({ time: new Date().toLocaleTimeString('en-GB'), method, route, status, type: '', origin });
-  if (log.length > 400) log.shift();
-  renderLog();
-}
-let logScheduled = false;
-function renderLog() {
-  if (logScheduled) return;
-  logScheduled = true;
-  requestAnimationFrame(() => {
-    logScheduled = false;
-    const body = $('#log tbody');
-    if (!body) return;
-    const rows = log.slice(-60).reverse().map((e) => {
-      const tr = document.createElement('tr');
-      const ok = e.status < 300;
-      [e.time, e.method, e.route, e.status, e.type, e.origin].forEach((v, i) => {
-        const td = document.createElement('td');
-        td.textContent = v;
-        if (i === 3) td.className = ok ? 'ok' : 'bad';
-        if (i === 1 || i === 2 || i === 4) td.className = 'mono';
-        tr.appendChild(td);
-      });
-      return tr;
-    });
-    body.replaceChildren(...rows);
-    $('#log-count').textContent = `${log.length} call${log.length === 1 ? '' : 's'}`;
-  });
-}
-
-const tableTsv = (table) => [...table.querySelectorAll('tr')].map((tr) => [...tr.children].map((c) => c.innerText.trim()).join('\t')).join('\n');
-
-async function copyText(btn, text) {
-  const label = btn.textContent;
-  const done = (t) => { btn.textContent = t; setTimeout(() => { btn.textContent = label; }, 1400); };
-  try { await navigator.clipboard.writeText(text); done('Copied'); } catch (e) { console.error(e); done('Failed'); }
-}
-
-/** The app's unit tests (app/src/test), replayed against the Kotlin/Wasm build. */
-function runTests() {
-  const rows = JSON.parse(kt.unitTests());
-  const body = $('#tests tbody');
-  body.replaceChildren(...rows.map((r) => {
-    const tr = document.createElement('tr');
-    [r.test, r.step, r.expected, r.actual].forEach((v) => { const td = document.createElement('td'); td.textContent = v; td.className = 'mono'; tr.appendChild(td); });
-    const td = document.createElement('td');
-    td.textContent = r.pass ? 'pass' : 'FAIL';
-    td.className = r.pass ? 'ok' : 'bad';
-    tr.appendChild(td);
-    return tr;
-  }));
-  const passed = rows.filter((r) => r.pass).length;
-  $('#tests-summary').textContent = `${passed} of ${rows.length} assertions passed`;
-  $('#tests-summary').className = passed === rows.length ? 'ok' : 'bad';
-}
-
-function templatesPanel() {
-  const input = $('#tpl-input');
-  const out = $('#tpl-out');
-  const run = () => {
-    const v = input.value;
-    out.replaceChildren(...['EMAIL', 'PASSWD', 'NAME'].map((t) => {
-      const ok = kt.templateTest(t, v);
-      const li = document.createElement('li');
-      const b = document.createElement('b');
-      b.textContent = ok ? 'matches' : 'no match';
-      b.className = ok ? 'ok' : 'bad';
-      li.append(`FieldsTemplates.${t}: `, b);
-      return li;
-    }));
-  };
-  input.addEventListener('input', run);
-  run();
-}
-
 /** Keeps the phone at its real size when there is room, scaled down otherwise. */
 function fitPhone() {
   const phone = $('.phone'), holder = $('.phone-holder');
   const avail = holder.clientWidth;
-  const natural = 432;
-  const z = Math.min(1, avail / natural);
+  const natural = 432, tall = 832;
+  const z = Math.min(1, avail / natural, (innerHeight - 32) / tall);
   phone.style.zoom = String(z);
 }
 
@@ -1905,11 +1809,6 @@ async function boot() {
   try {
     const [mod] = await Promise.all([import('./kotlin-wasm/dichbox.mjs'), loadResources(), initMock()]);
     kt = mod;
-    // requests the Kotlin verifiers send on their own are labelled in the log
-    kt = { ...mod,
-      viewInput: from('SignIn/SignUpVerifier', mod.viewInput), viewClick: from('SignIn/SignUpVerifier', mod.viewClick),
-      profileVerify: from('profile verifier', mod.profileVerify), passwdVerify: from('password verifier', mod.passwdVerify),
-      boxNameCheck: from('box name check', mod.boxNameCheck) };
     // like the DichBox showcase: the first demo user starts signed in
     const first = demoCredentials()[0];
     const [, signed] = api('enterUser', { email: first.email, passwd: first.passwd });
@@ -1921,14 +1820,6 @@ async function boot() {
     screen.querySelector('.app').replaceChildren(activity.root);
     activity.created();
     status.remove();
-    const creds = $('#creds');
-    creds.replaceChildren(...demoCredentials().map((c) => {
-      const tr = document.createElement('tr');
-      [c.name, c.email, c.passwd].forEach((v) => { const td = document.createElement('td'); td.textContent = v; td.className = 'mono'; tr.appendChild(td); });
-      return tr;
-    }));
-    runTests();
-    templatesPanel();
   } catch (e) {
     console.error(e, e.stack);
     status.className = 'err';
@@ -1936,16 +1827,6 @@ async function boot() {
   }
 }
 
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-copy]');
-  if (!b) return;
-  const kind = b.dataset.copy;
-  if (kind === 'log') copyText(b, ['time\tKotlin call\troute\tstatus\tresponse\tcalled from', ...log.map((x) => [x.time, x.method, x.route, x.status, x.type, x.origin].join('\t'))].join('\n'));
-  if (kind === 'creds') copyText(b, tableTsv($('#creds-table')));
-  if (kind === 'tests') copyText(b, tableTsv($('#tests table')));
-});
-$('#log-clear')?.addEventListener('click', () => { log.length = 0; renderLog(); });
-$('#tests-run')?.addEventListener('click', runTests);
 window.addEventListener('resize', fitPhone);
 fitPhone();
 boot();

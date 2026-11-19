@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DichBox Mobile</title>
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="../app/src/main/res/mipmap-xxxhdpi/dich_icon.png" type="image/png">
   <script src="theme.js"></script>
   <meta name="description" content="The DichBoxMobile Android app in your browser: its own layouts and resources inflated into a phone frame, its platform-independent Kotlin compiled to WebAssembly, and an in-browser DichBox API with demo users and boxes.">
   <link rel="modulepreload" href="./kotlin-wasm/dichbox.mjs">
@@ -193,21 +193,14 @@
       .mini { padding: 5px 10px; }
       ul.split li { grid-template-columns: 1fr; gap: 4px; }
     }
+      .stage { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 16px; }
+    .stage .phone-holder { width: 100%; }
+    .theme-toggle.corner { position: fixed; top: 12px; right: 12px; z-index: 5; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <img src="icon.svg" alt="" width="52" height="52">
-    <div>
-      <h1>DichBox Mobile</h1>
-      <p>The <a href="https://github.com/Andrew1407/DichBoxMobile">DichBoxMobile</a> Android client for <a href="https://github.com/Andrew1407/DichBox">DichBox</a>, shown in your browser: its own screens and resources in a phone frame, its platform-independent Kotlin compiled to WebAssembly, and an in-browser DichBox API.</p>
-    </div>
-    <button class="theme-toggle" data-theme-toggle></button>
-  </header>
-
-  <div class="layout">
-    <div class="phone-col">
+<button class="theme-toggle corner" data-theme-toggle></button>
+<main class="stage">
       <div class="phone-holder">
         <div class="phone">
           <div class="screen" id="screen">
@@ -220,55 +213,7 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div>
-      <section class="panel">
-        <h2>What runs here</h2>
-        <ul class="split">
-          <li><span class="lang kt">Kotlin → Wasm</span><p>The app's own Kotlin, compiled unchanged from <code>app/src</code> by <a href="https://github.com/Andrew1407/DichBoxMobile/tree/main/web/kotlin">web/kotlin</a>:
-            the API client (<code>UserAPI</code>, <code>BoxesAPI</code>, <code>ApiParser</code>, the Retrofit service interfaces), the <code>UserContainer</code>/<code>BoxesContainer</code> data classes,
-            <code>SignInVerifier</code>/<code>SignUpVerifier</code> with <code>FieldsVerifier</code> and <code>InputVerifier</code> (they colour the sign-in inputs, write the warnings and enable the button),
-            <code>FieldsTemplates</code>, <code>FieldsWarnings</code>, <code>MutableInputVerifier</code>, <code>NotificationsTypes</code> (notification texts), <code>ViewDecorators</code> (profile and box fields)
-            and <code>OpenedFilesViewModel</code> (the opened files tabs). Android, Retrofit, OkHttp, Gson, coroutines and JUnit are replaced by small stand-ins with the same API.</p></li>
-          <li><span class="lang js">Replicated</span><p>The screens are the app's <code>res/layout</code> XML files, inflated in the browser with its colours, styles, shape drawables, icons and fonts from <code>res/</code>.
-            The fragment and activity logic (navigation, lists, dialogs, file editor, colour picker, image picker) is ported to JavaScript from the app's <code>view/</code> and <code>mv/</code> classes,
-            and so are the edit-form verifier set-ups, which call the Kotlin <code>MutableInputVerifier</code>. The DichBox server is an in-browser mock ported from the
-            <a href="https://github.com/Andrew1407/DichBox/tree/main/client/src/demo">DichBox showcase</a>.</p></li>
-        </ul>
-        <p class="note">An Android app can't run in a browser: there's no Android runtime for the web, and remote emulators are paid services. So the UI is a faithful replica, and the parts of the app that don't depend on Android run for real.</p>
-      </section>
-
-      <section class="panel">
-        <div class="copy-head"><h2>Demo accounts</h2><span class="actions"><button class="mini" type="button" data-copy="creds">Copy as TSV</button></span></div>
-        <div class="table-wrap"><table id="creds-table"><thead><tr><th>user</th><th>email</th><th>password</th></tr></thead><tbody id="creds"></tbody></table></div>
-        <p class="hint">The first user is signed in. Data lives in memory and resets when you reload. Pull a list down to refresh it, swipe or click tabs to switch pages, and use the round centre button to go home.</p>
-      </section>
-
-      <section class="panel">
-        <div class="copy-head"><h2>Requests sent by the Kotlin API client</h2><span class="muted" id="log-count" style="font-size:13px">0 calls</span>
-          <span class="actions"><button class="mini" type="button" id="log-clear">Clear</button><button class="mini" type="button" data-copy="log">Copy as TSV</button></span></div>
-        <div class="table-wrap" id="log"><table><thead><tr><th>time</th><th>Kotlin call</th><th>route</th><th>status</th><th>response</th><th>called from</th></tr></thead><tbody></tbody></table></div>
-        <p class="hint">Each request is built by <code>ApiParser.makeRequest</code> from the app's data classes and parsed back by <code>getResponseData</code>; "response" is the Kotlin class it produced.</p>
-      </section>
-
-      <section class="panel" id="tests">
-        <div class="copy-head"><h2>The app's unit tests on WebAssembly</h2><span id="tests-summary" style="font-size:13px"></span>
-          <span class="actions"><button class="mini" type="button" id="tests-run">Run again</button><button class="mini" type="button" data-copy="tests">Copy as TSV</button></span></div>
-        <div class="table-wrap"><table><thead><tr><th>test</th><th>assertion</th><th>expected</th><th>actual</th><th>result</th></tr></thead><tbody></tbody></table></div>
-        <p class="hint"><code>app/src/test</code> (<code>InputVerifierTest</code>, <code>MutableInputVerifierTest</code>) compiled unchanged, with a JUnit stand-in that records every assertion.</p>
-      </section>
-
-      <section class="panel">
-        <h2>Field templates</h2>
-        <div class="tpl"><input id="tpl-input" value="john.doe@example.com" aria-label="Text to test" spellcheck="false"><ul id="tpl-out"></ul></div>
-        <p class="hint">The regular expressions in <code>FieldsTemplates.kt</code> that the sign-up and profile forms check, run by the Kotlin build.</p>
-      </section>
-    </div>
-  </div>
-
-  <footer>Built from the app's sources by the <a href="https://github.com/Andrew1407/DichBoxMobile/blob/main/.github/workflows/pages.yml">pages workflow</a>. Needs a browser with WebAssembly GC (current Chrome, Edge, Firefox or Safari).</footer>
-</div>
+</main>
 
 <script type="module" src="./app.js"></script>
 </body>

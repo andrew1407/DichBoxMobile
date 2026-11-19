@@ -39,11 +39,11 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site/web _site/app/src/main
-          cp web/*.html web/*.js web/*.svg _site/web/
+          cp web/*.html web/*.js _site/web/
           cp -r web/mock web/kotlin-wasm _site/web/
           cp -r app/src/main/res _site/app/src/main/
           (cd app/src/main/res && find . -type f | sort) > _site/web/res-index.txt
-          echo '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./web/"><title>DichBox Mobile</title><link rel="icon" href="./web/icon.svg"><a href="./web/">Open the showcase</a>' > _site/index.html
+          echo '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./web/"><title>DichBox Mobile</title><link rel="icon" href="./app/src/main/res/mipmap-xxxhdpi/dich_icon.png"><a href="./web/">Open the showcase</a>' > _site/index.html
           touch _site/.nojekyll
 
       - uses: actions/configure-pages@v5
